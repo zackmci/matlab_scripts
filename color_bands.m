@@ -17,8 +17,8 @@
 
 % filename must be entered as a string, finaltime is final timestep
 
-filename='gravity_flow_fc1';
-finaltime=5996;
+filename='granular_flow_lube';
+finaltime=6700;
 diameter=0.6;
 
 cd('/home/zack/Documents/csv_data_files/')
@@ -59,7 +59,7 @@ headers={'Ids', 'Diameter', 'Density','Velocity:0', 'Velocity:1', ...
 csvwrite_with_headers([filename,'_loc.0.csv'], newfile, headers, 0, 0);
 
 % Loop to repeat this for all timesteps
-for i=1:finaltime,
+for i=0:finaltime,
     i 
     vtpdata=csvread([filename,'.',num2str(i),'.csv'],1,0);
     sorted=sortrows(vtpdata,1);
