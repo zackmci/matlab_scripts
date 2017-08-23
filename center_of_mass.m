@@ -16,8 +16,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Initial inputs for run
-filename='granular_flow_lube';
-finaltime=9999;
+filename='granular_flow_fric_7900';
+finaltime=7900;
 
 % Initialize vectors to store centers of mass
 centers_of_mass_x=zeros(1,finaltime);
@@ -28,7 +28,7 @@ cd('/home/zack/Documents/csv_data_files/')
 % Headers to be used in file
 headers={'Diameter', 'Position:0', 'Position:1'};
 
-diameter = 0.6
+diameter = 0.6;
 
 
 

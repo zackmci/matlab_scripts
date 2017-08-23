@@ -23,22 +23,18 @@
 clear all; close all;
 
 % ** Make sure to change below if looking at a mixing region problem **
-%filename='box256_9.3_everything_fc';
-filename='granular_flow_lube_fc';
-filename2='granular_flow_lube';
+filename='box256_9.3_everything_fc';
+%filename='zack_ramp_fc';
+%filename='box512_ht_1_fc';
 %filename='box512_ht_fc';
-finaltime=9999;
-%finaltime=800;
+%finaltime=1120;
+finaltime=800;
 %finaltime=50;
-time_factor=0.01;
+time_factor=0.125;
 angle_bins=20;      % Number of bins for the circle
 bin_angles=(2*pi)/angle_bins;
-box_size=5;
-g_x=270;
-g_y=-943;
 
-adjusted_angle=atan(g_x/g_y);
-cd('/home/zack/Documents/csv_data_files/')
+cd('/home/jmschl/Desktop/MixingCalculations/csvData/')
 
 % Setting up arrays to hold a and theta values and the orientations
 contact_a=[];
@@ -93,44 +89,15 @@ for timestep=1:finaltime,
     % New columns: f_n f_t f_m x1 y1 x2 y2
     
     % ** UNCOMMENT ONLY IF LOOKING AT MIXING REGION PROBLEMS **
-    vtpdatas=csvread([filename2,'.',num2str(timestep),'.csv'],1,0);
-
-    % Calculate the total mass of the system
-    total_mass = sum((4/3)*pi()*(vtpdatas(:,2)/2).^3 .* vtpdatas(:,3));
+    new_data(new_data(:,4) < 64.5,:)=[];
+    new_data(new_data(:,6) < 64.5,:)=[];
+    new_data(new_data(:,4) > 191.5,:)=[];
+    new_data(new_data(:,6) > 191.5,:)=[];
     
-    % Calculate the center of mass in the x direction
-    x_mean = (sum((4/3)*pi()*(vtpdatas(:,2)/2).^3 .* vtpdatas(:,3).* ...
-        vtpdatas(:,7)))/total_mass;
-    % Calculate the center of mass in the y direction
-    y_mean = (sum((4/3)*pi()*(vtpdatas(:,2)/2).^3 .* vtpdatas(:,3).* ...
-        vtpdatas(:,8)))/total_mass;
-    
-    new_data(new_data(:,4) < x_mean-box_size,:)=[];
-    new_data(new_data(:,6) < x_mean-box_size,:)=[];
-    new_data(new_data(:,4) > x_mean+box_size,:)=[];
-    new_data(new_data(:,6) > x_mean+box_size,:)=[];
-    
-    new_data(new_data(:,5) < y_mean-box_size,:)=[];
-    new_data(new_data(:,7) < y_mean-box_size,:)=[];
-    new_data(new_data(:,5) > y_mean+box_size,:)=[];
-    new_data(new_data(:,7) > y_mean+box_size,:)=[];
     % Calculate the orientations of the contacts, using mod to have the 
     %  data go from 0 to 2pi, instead of -pi to pi
     angles=mod(atan2(new_data(:,7)-new_data(:,5), ...
         new_data(:,6)-new_data(:,4)),2*pi);
-    
-    angles=angles+adjusted_angle;
-    
-    % To make sure there are no negative angles, this portion checks for
-    % negative numbers and adds 2*pi to them.
-    final_row=size(angles,1);
-    for array_position=1:final_row,
-        if angles(array_position)<0;
-            angles(array_position)=angles(array_position)+2*pi;
-        else
-            angles(array_position)=angles(array_position);
-        end
-    end
     
     % Make it so all orientations are in the top half of the rose diagram
     forces_angles=cat(2,new_data(:,1:3),angles);
@@ -140,34 +107,29 @@ for timestep=1:finaltime,
     low_angles(:,4)=low_to_high;
     all_high=cat(1,high_angles,low_angles);
     
-%     % Randomly choose half of the orientations and put them in the 
-%     %  bottom half of the rose diagram
-%     random_values=rand(length(all_high),1);
-%     all_high=cat(2,all_high,random_values);
-%     new_high_angles=all_high(all_high(:,5)<0.5,:);
-%     new_low_angles=all_high(all_high(:,5)>=0.5,:);
-%     new_low_angles(:,4)=new_low_angles(:,4)+pi;
-
-    % Copy the upper half of rose diagram and move it to the bottom half
-    low_copy_high=all_high;
-    low_copy_high(:,4)=low_copy_high(:,4)+pi;
-    final_contacts=cat(1,all_high,low_copy_high);
+    % Randomly choose half of the orientations and put them in the 
+    %  bottom half of the rose diagram
+    random_values=rand(length(all_high),1);
+    all_high=cat(2,all_high,random_values);
+    new_high_angles=all_high(all_high(:,5)<0.5,:);
+    new_low_angles=all_high(all_high(:,5)>=0.5,:);
+    new_low_angles(:,4)=new_low_angles(:,4)+pi;
     
-%     final_contacts=cat(1,new_high_angles,new_low_angles);
+    final_contacts=cat(1,new_high_angles,new_low_angles);
     % New columns: f_n f_t f_m angle random_number
     
     forces_n=final_contacts(:,1);
     forces_t=final_contacts(:,2);
     
 %     % Sample data to test
-%     orientations=[233,67,287,287,53,270,315,199,358]'*pi/180;
-%     forces_n=[4, 6, 7, 4, 4, 7, 1, 2,3]';
+    %orientations=[233,67,287,287,53,270,315,199,358]'*pi/180;
+    %forces_n=[4, 6, 7, 4, 4, 7, 1, 2,3]';
 %     orientations=[233,67,287,287,53,270,315,199]'*pi/180;
 %     forces_n=[4, 6, 7, 4, 4, 7, 1, 2]';
-
+    
     % Pull out orientations so I don't need to redo code
     orientations=final_contacts(:,4);
-    
+
     force_n_mean=mean(forces_n);
     force_t_mean=mean(forces_t);   
     counts=length(orientations);
@@ -198,7 +160,7 @@ for timestep=1:finaltime,
     % Find the anisotropy orientation
     [Mc,Ic]=max(e_values_c);
     theta_value_c=thetas_c(Ic);
-
+    
     % Keep the number of contacts within each angle bin for plotting later
     [tout, rout]=rose(orientations,angle_bins);
     rout=reshape(rout,[4,angle_bins]);
@@ -222,7 +184,7 @@ for timestep=1:finaltime,
     f22n=forces_n.*sin(orientations).*sin(orientations);
     F22n=sum(f22n);
     
-    Fij_n=(1/force_n_mean).*[F11n,F12n; F21n,F22n];
+    Fij_n=(1/force_n_mean*counts).*[F11n,F12n; F21n,F22n];
     
     % Calculate the eigenvalues and eigenvectors
     [e_vectors_n,e_values_n]=eig(Fij_n);
@@ -254,7 +216,7 @@ for timestep=1:finaltime,
     %  normal forces
     fn_a=cat(2,fn_a,a_value_n);
     fn_theta=cat(2,fn_theta,theta_value_n);
-    binning_forces_n=cat(2,binning_forces_n,binned_clear all; close all;
+    binning_forces_n=cat(2,binning_forces_n,binned_forces_n);
     
     % Tangential Force calculations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
@@ -267,7 +229,7 @@ for timestep=1:finaltime,
     f22t=forces_t.*sin(orientations).*sin(orientations);
     F22t=sum(f22t);
     
-    Fij_t=(1/force_t_mean).*[F11t,F12t; F21t,F22t];
+    Fij_t=(1/force_t_mean*counts).*[F11t,F12t; F21t,F22t];
     
     % Calculate the eigenvalues and eigenvectors
     [e_vectors_t,e_values_t]=eig(Fij_t);
@@ -303,19 +265,19 @@ end %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 saving_data=[contact_a', contact_theta',fn_a',fn_theta',ft_a',ft_theta'];
 rose_diagram_data=[binning_contacts,binning_forces_n,binning_forces_t];
 
-cd('/home/zack/Documents/csv_data_files/results/')
+cd('/home/jmschl/Desktop/MixingCalculations')
 csvwrite(['As_and_thetas_',filename,'_',num2str(angle_bins),'bins.csv'] ...
     ,saving_data,0,0);
 csvwrite(['Orientations_',filename,'_',num2str(angle_bins),'bins.csv'], ...
     rose_diagram_data,0,0);
-cd('/home/zack/Documents/csv_data_files/')
+cd('/home/jmschl/Desktop/MixingCalculations/csvData/')
 
 % Below is for already calculated lists %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 % Reading in the data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-cd('/home/zack/Documents/csv_data_files/results/')
+cd('/home/jmschl/Desktop/MixingCalculations')
 list1=csvread(['As_and_thetas_',filename,'_',num2str(angle_bins), ...
     'bins.csv'],0,0);
 list2=csvread(['Orientations_',filename,'_',num2str(angle_bins), ... 
@@ -335,11 +297,11 @@ binning_forces_t=list2(:,2*finaltime+1:end);
 
 % Plotting the temporal data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 t=0:length(contact_theta)-1; 
-t=t/100;
+t=t/8;
 % Plot thetas in radians through time
 plot(t,contact_theta,t,fn_theta,t,ft_theta,'LineWidth',2)
 legend('contact','normal force','tangential force')
-xlim([0 finaltime/100])
+xlim([0 finaltime/8])
 xlabel('Time (s)')
 ylabel('Theta (radians)')
 
@@ -347,19 +309,19 @@ ylabel('Theta (radians)')
 plot(t,contact_theta*(180/pi),t,fn_theta*(180/pi),t,ft_theta*(180/pi), ...
     'LineWidth',2)
 legend('contact','normal force','tangential force')
-xlim([0 finaltime/100])
+xlim([0 finaltime/8])
 xlabel('Time (s)')
 ylabel('Theta (degrees)')
 
 % Plot aniosotropy value through time
 plot(t,contact_a,t,fn_a,t,ft_a,'LineWidth',2)
 legend('contact','normal force','tangential force')
-xlim([0 finaltime/100])
+xlim([0 100])
 xlabel('Time (s)')
 ylabel('Anisotropy')
 
 % Plot rose diagrams for contacts and calculated anisotropy ~~~~~~~~~~~~~~~ 
-toi=1;      % Timestep of interest (looking at just 1 timestep)
+toi=1100;      % Timestep of interest (looking at just 1 timestep)
 
 [tout, rout]=rose(binning_contacts(:,toi),angle_bins);
 new_rout_contacts=zeros(angle_bins,1);
@@ -374,7 +336,7 @@ theta=0:0.01:2*pi;
 
 % Make invisible plot to adjust the maximum radius needed by the data
 figure
-radius=.3;
+radius=0.3;
 P = polar(theta, radius * ones(size(theta)));
 set(P, 'Visible', 'off')
 hold on
@@ -447,39 +409,39 @@ theta=0:0.01:2*pi;
 rho=1+fn_a(toi)*cos(2*(theta-fn_theta(toi)));
 polar(theta,rho,'r')
 
-% Contacts diagram of anisotropy fit and counts through time (movie)
-figure
-u=uicontrol('Min',1,'Max',finaltime,'Value',1);
-for k=1:finaltime
-    
-    [tout, rout]=rose(binning_forces_n(:,k),angle_bins);
-    new_rout_n=zeros(angle_bins,1);
-    new_rout_n=cat(2,new_rout_n,binning_forces_n(:,k));
-    new_rout_n=cat(2,new_rout_n,binning_forces_n(:,k));
-    new_rout_n=cat(2,new_rout_n,zeros(angle_bins,1));
-    new_rout_n=reshape(new_rout_n',[1,angle_bins*4]);
-
-    force_n_mean=mean(binning_forces_n(:,k));
-
-    theta=0:0.01:2*pi;
-    radius=2;     % Change to the maximum radius needed by the data
-    P = polar(theta, radius * ones(size(theta)));
-    set(P, 'Visible', 'off')
-    hold on
-    
-    % Contacts diagram for current timestep
-    polar(tout,new_rout_n/force_n_mean,'b')  % Plot actual values
-    rho=1+fn_a(k)*cos(2*(theta-fn_theta(k)));
-    polar(theta,rho,'r')
-    u.Value=k;
-    M(k)=getframe(gcf);
-    hold off
- end   
-v=VideoWriter(['forces_n_mixing_region_',filename,'.avi']);
-v.FrameRate=100;
-open(v)
-writeVideo(v,M)
-close(v)
+% % Contacts diagram of anisotropy fit and counts through time (movie)
+% figure
+% u=uicontrol('Min',1,'Max',finaltime,'Value',1);
+% for k=1:finaltime
+%     
+%     [tout, rout]=rose(binning_forces_n(:,k),angle_bins);
+%     new_rout_n=zeros(angle_bins,1);
+%     new_rout_n=cat(2,new_rout_n,binning_forces_n(:,k));
+%     new_rout_n=cat(2,new_rout_n,binning_forces_n(:,k));
+%     new_rout_n=cat(2,new_rout_n,zeros(angle_bins,1));
+%     new_rout_n=reshape(new_rout_n',[1,angle_bins*4]);
+% 
+%     force_n_mean=mean(binning_forces_n(:,k));
+% 
+%     theta=0:0.01:2*pi;
+%     radius=2;     % Change to the maximum radius needed by the data
+%     P = polar(theta, radius * ones(size(theta)));
+%     set(P, 'Visible', 'off')
+%     hold on
+%     
+%     % Contacts diagram for current timestep
+%     polar(tout,new_rout_n/force_n_mean,'b')  % Plot actual values
+%     rho=1+fn_a(k)*cos(2*(theta-fn_theta(k)));
+%     polar(theta,rho,'r')
+%     u.Value=k;
+%     M(k)=getframe(gcf);
+%     hold off
+%  end   
+% v=VideoWriter(['forces_n_mixing_region_',filename,'.avi']);
+% v.FrameRate=8;
+% open(v)
+% writeVideo(v,M)
+% close(v)
 
  
 % Plot rose diagrams for tangential forces and calculated anisotropy ~~~~~~ 
@@ -547,6 +509,8 @@ polar(theta,rho,'r')
 % Coordination Number plots ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 % Plot contact anisotropy and coordination number through time
+t=0:length(contact_theta)-1; 
+t=t/8;
 a=csvread(['ave_coord_',filename,'.csv'],0,0);
 a=a(:,2);   % Pull out only mixing region coordination numbers
 [ax,line1,line2]=plotyy(t,a,t,contact_a);

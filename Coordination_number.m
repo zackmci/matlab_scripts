@@ -20,8 +20,9 @@
 clear all; close all;
 
 % Make sure to change below if looking at a mixing region problem
-filename='granular_flow_lube_FC';
-finaltime=7296;
+filename='granular_flow_lube_fc';
+finaltime=9999;
+box_size=5;
 
 cd('/home/zack/Documents/csv_data_files/')
 

@@ -13,7 +13,7 @@
 cd('/home/zack/Documents/csv_data_files/')
 
 filename='granular_flow_lube';
-finaltime=3471;      % Last fluid timestep
+finaltime=9999;      % Last fluid timestep
 width=512;          % Width of the fluid domain [cm]
 height=128;         % Height of the fluid domain [cm]
 diameter=0.5;       % Particle diameter [cm]

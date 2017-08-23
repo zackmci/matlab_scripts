@@ -16,6 +16,7 @@ cd('/home/zack/Documents/csv_data_files/')
 headers={'phi', 'z'};
 headers2={'t*', 'ave_phi'};
 
+api_time = [];
 diameter = 0.6;
 
 a=csvread([filename,'.0.csv'],1,0);height=64;
@@ -86,7 +87,9 @@ for timestep=0:finaltime
     t=timestep/100;
     sec=t/tn;
     
-    aphi_time = [(mean(vfdata(:,1))-1) sec];
+    aphi = [(mean(vfdata(:,1))-1) sec];
+    api_time = cat(1,api_time,aphi);
+    
 end
 
 csvwrite_with_headers([filename2,'_average_phi.csv'],aphi_time,headers2,...
